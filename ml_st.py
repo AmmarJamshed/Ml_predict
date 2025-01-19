@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[3]:
-
-
 import streamlit as st
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -23,7 +17,7 @@ def train_model(model, X_train, X_test, y_train, y_test):
 
 # Streamlit App
 st.title("Regression Model Comparison")
-st.write("Upload your dataset, select a target variable, handle categorical data, and compare regression models!")
+st.write("Upload your dataset, handle null values, select a target variable, and compare regression models!")
 
 # Upload dataset
 uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
@@ -32,6 +26,27 @@ if uploaded_file is not None:
     # Load dataset
     df = pd.read_csv(uploaded_file)
     st.write("Dataset Preview:")
+    st.dataframe(df)
+
+    # Handle missing values
+    st.write("Handling Missing Values:")
+    null_handling_method = st.radio(
+        "Choose a method to handle null values:",
+        options=["Drop Rows with Null Values", "Fill Null Values with Median"],
+        index=0,
+    )
+
+    if null_handling_method == "Drop Rows with Null Values":
+        df = df.dropna()
+        st.write("Rows with null values removed.")
+    elif null_handling_method == "Fill Null Values with Median":
+        for col in df.select_dtypes(include=["number"]).columns:
+            df[col] = df[col].fillna(df[col].median())
+        for col in df.select_dtypes(include=["object"]).columns:
+            df[col] = df[col].fillna(df[col].mode()[0])
+        st.write("Null values filled with median for numeric columns and mode for categorical columns.")
+
+    st.write("Dataset After Handling Null Values:")
     st.dataframe(df)
 
     # Handle Categorical Variables
@@ -100,4 +115,3 @@ if uploaded_file is not None:
         _, _, predictions = train_model(LinearRegression(), X_train, X_test, y_train, y_test)
         sample_results = pd.DataFrame({"Actual": y_test.values[:5], "Predicted": predictions[:5]})
         st.dataframe(sample_results)
-
